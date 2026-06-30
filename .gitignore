@@ -1,0 +1,11 @@
+# Godot 4 import + editor cache
+.godot/
+# Exported builds
+/build/
+*.import
+# Editor backups
+*.bak
+# Summer Engine machine-local state (project id + absolute path)
+.summer/local/
+# Stray generated assets (not part of the template)
+/assets/
