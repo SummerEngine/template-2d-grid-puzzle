@@ -1,0 +1,47 @@
+{
+  "id": "2d-grid-puzzle",
+  "version": "1.0.0",
+  "name": "Grid-Based Puzzle",
+  "engineMinVersion": "0.5.43",
+  "entryScene": "res://screens/main_menu.tscn",
+  "dimension": "3D",
+  "mechanics": [
+    "grid-movement",
+    "turn-based-ticks",
+    "realtime-toggle",
+    "sokoban-crates",
+    "pressure-plates",
+    "keys-and-doors",
+    "color-channels",
+    "chasing-enemy",
+    "collectible-stars",
+    "ascii-map-levels",
+    "level-select",
+    "camera-toggle",
+    "3d-character",
+    "sprite-character",
+    "arduino-input"
+  ],
+  "genres": [
+    "puzzle",
+    "sokoban",
+    "top-down"
+  ],
+  "agentBrief": "A grid-based top-down puzzle template (Godot 4.6 Mono, Compatibility renderer; unshaded 3D primitives + pixel-art textures, no lights — cheap on weak hardware). ENTRY SCENE: res://screens/main_menu.tscn — menu chain (main menu, settings, level select, pause, win/fail screens) routed by the GameFlow autoload; the game itself is res://game.tscn (game_manager.gd + TickManager + Level + Camera3D). LEVELS: the standout system — each level is an ASCII map in the LEVELS array in scripts/autoload/level_manager.gd. EDITING THE MAP IS EDITING THE GAME. Legend: '#' wall, '@' player, '$' pushable crate, '*' star (collect ALL to win), 'E' chasing enemy, space = floor; neutral channel: 'K' key / 'D' door / '.' pressure plate; colored channels: 'b'/'B'/'1' blue plate/key/door, 'g'/'G'/'2' green, 'r'/'R'/'3' red — a door opens while any plate of its channel is pressed, or FOREVER once its channel's key is collected. ADD A LEVEL: append a {name, realtime, map} entry to LEVELS — the cheapest, highest-leverage way to extend the game. Ships 5 levels: Warmup, Vault, Two Crates, Color Lock, The Chase. WIN RULE (scripts/level.gd is_won): collect every star; a starless map falls back to the classic sokoban rule (a crate on every neutral plate). MOVEMENT MODES: LevelManager.move_mode — 0 turn-based (one keypress = one grid step; movers listen to TickManager.tick, positions lerp) or 1 real-time (CharacterBody3D.move_and_slide, crates become live RigidBody3D physics). CAMERA: LevelManager.cam_view — 0 top-down orthographic, 1 perspective; Tab cycles in-game. PLAYER VISUAL: LevelManager.player_visual — 0 = the standard Summer robot (rigged .glb set in art/models/robot/, driven by scripts/robot_character.gd: merges idle/walk/run clips into an 'extra' AnimationLibrary at runtime, watches its own motion so it animates correctly in BOTH movement modes, turns to face travel; ROBOT_SCALE tunable) or 1 = a 2D 4-direction sprite sheet (scripts/sprite_character.gd + art/sprites/hero_green.png, billboarded AnimatedSprite3D). The Dev Settings screen (Settings → Dev Settings, scripts/ui/dev_settings.gd) flips camera/movement/player/level-select at runtime — it exists to showcase these template features; hardcode the user's choices and delete it for a real release. AUTOLOADS (6, wired in project.godot): InputRouter (keyboard + a stubbed 1-byte Arduino serial protocol feed the SAME input actions — gameplay code never knows which), UITheme, AudioManager, LevelManager (level list + settings state), Fader, GameFlow (screen router: GameFlow.goto('game')). INPUT ACTIONS (already bound): move_up/down/left/right (WASD + arrows), action, camera_toggle (Tab), restart (R). ART: every board visual is built in code in scripts/visuals.gd from pixel-art PNGs in art/tiles/ — reskin by swapping PNGs or editing one make_* function; walls/crates are built from 6 QuadMesh faces, NOT BoxMesh (BoxMesh's cross-layout UV crops textures — keep the quad-face pattern for any new textured block). Doors are two sliding halves (scripts/door.gd); stars/keys spin via scripts/pickup.gd. CUSTOMIZE BY: writing new ASCII levels, adding legend entries (one LEGEND row + one match case in level.gd build()), reskinning art/tiles/, retuning enemy pacing in scripts/enemy.gd — do NOT rewrite the Level/GridEntity/TickManager spine or the grid/world coordinate math in scripts/grid.gd.",
+  "shipsProjectGodot": true,
+  "packExclude": [
+    "art/models/robot/*_texture_0.png",
+    "art/models/robot/*_texture_0.png.import"
+  ],
+  "userFacing": {
+    "tagline": "A grid puzzle starter: push crates, trigger plates, grab keys, dodge a chasing enemy — levels are text you edit.",
+    "highlights": [
+      "Five puzzle levels authored as plain-text ASCII maps — add a level by typing a grid",
+      "Turn-based or real-time movement, switchable at runtime",
+      "Color-channel logic: pressure plates, keys, and doors in blue, green, and red",
+      "Pushable crates, collectible stars, and an enemy that hunts you down",
+      "Play as the standard Summer robot (rigged 3D) or a classic 2D sprite",
+      "Top-down or perspective camera, and Arduino-ready input routing"
+    ]
+  }
+}

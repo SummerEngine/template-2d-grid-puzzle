@@ -34,6 +34,20 @@ and remove this menu.",
 	cam_row.add_child(cam_option)
 	col.add_child(cam_row)
 
+	# -- Player look --
+	var player_row := HBoxContainer.new()
+	var player_label := make_label("Player", 22)
+	player_label.custom_minimum_size.x = 120
+	player_row.add_child(player_label)
+	var player_option := OptionButton.new()
+	player_option.custom_minimum_size = Vector2(260, 0)
+	for name in ["3D robot", "2D sprite"]:
+		player_option.add_item(name)
+	player_option.selected = LevelManager.player_visual
+	player_option.item_selected.connect(_on_player_selected)
+	player_row.add_child(player_option)
+	col.add_child(player_row)
+
 	# -- Movement mode --
 	var move_row := HBoxContainer.new()
 	var move_label := make_label("Movement", 22)
@@ -63,6 +77,10 @@ and remove this menu.",
 
 func _on_cam_selected(index: int) -> void:
 	LevelManager.cam_view = index
+
+
+func _on_player_selected(index: int) -> void:
+	LevelManager.player_visual = index
 
 
 func _on_move_selected(index: int) -> void:

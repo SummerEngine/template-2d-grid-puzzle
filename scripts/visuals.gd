@@ -207,12 +207,28 @@ static func _door_half(x_pos: float, node_name: String, tint: Color = Color(1, 1
 	return node
 
 
-## Player visual: a flat-shaded blue capsule so the actor reads clearly.
-## Visual only -- collision shape is added by Level._spawn().
-## The player is a 2D animated sprite (see make_sprite_character). Want a different look?
-## Point PLAYER_SHEET at your own 4-direction sheet and adjust the grid/rows here.
-static func make_player() -> Node3D:
+## Player visual: the standard Summer robot (rigged 3D) or a 2D animated sprite --
+## the Dev Settings "Player" row flips LevelManager.player_visual, and Level.build()
+## passes the choice in. Visual only -- collision shape is added by Level._spawn().
+## Want a different 2D look? Point PLAYER_SHEET at your own 4-direction sheet.
+static func make_player(robot: bool = true) -> Node3D:
+	if robot:
+		return make_robot_character()
 	return make_sprite_character(PLAYER_SHEET, 4, 4, {down = 0, up = 1, left = 2, right = 3})
+
+## The standard Summer robot: a rigged .glb with a baked idle, plus walk/run clips
+## merged in at runtime. The pivot carries scripts/robot_character.gd, which handles
+## clip merging, auto-scaling to cell size, motion-watched animation, and facing.
+const ROBOT_MODEL := "res://art/models/robot/robot_idle.glb"
+
+static func make_robot_character() -> Node3D:
+	var pivot := Node3D.new()
+	pivot.name = "Robot"
+	pivot.set_script(load("res://scripts/robot_character.gd"))
+	var model: Node3D = load(ROBOT_MODEL).instantiate()
+	model.scale = Vector3.ONE * RobotCharacter.ROBOT_SCALE
+	pivot.add_child(model)
+	return pivot
 
 ## Build a SpriteCharacter (AnimatedSprite3D) from a 4-direction walk sheet.
 ##   columns/rows: the sheet grid. row_map: which ROW holds each direction's walk cycle.
