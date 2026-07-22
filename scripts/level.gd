@@ -12,13 +12,15 @@ class_name Level
 ## WIN: collect every star (`*`) to win. A level with no star falls back to the legacy
 ## sokoban rule (all channel-0 plates covered by a crate).
 
-signal won  ## emitted once, the moment the win condition is first met
+signal won   ## emitted once, the moment the win condition is first met
+signal lost  ## emitted once when an enemy catches the player
 
 const LEGEND := {
 	"#": {type = "wall"},
 	"@": {type = "player"},
 	"$": {type = "box"},
-	"*": {type = "star"},   # collect to win
+	"*": {type = "star"},    # collect to win
+	"E": {type = "enemy"},   # chases the player; touching you = caught
 	# channel 0 — no color:
 	".": {type = "plate", channel = 0},   # also the sokoban win goal
 	"K": {type = "key", channel = 0},
@@ -40,6 +42,7 @@ const LEGEND := {
 
 const PlayerScript := preload("res://scripts/player.gd")
 const BoxScript := preload("res://scripts/box.gd")
+const EnemyScript := preload("res://scripts/enemy.gd")
 
 var grid: Grid
 var player: GridEntity
@@ -61,6 +64,7 @@ var _stars := {}           # Vector2i -> star vis (uncollected)
 var _star_total := 0       # stars the level started with
 var _stars_collected := 0
 var _won := false
+var _lost := false
 
 func build(map_lines: Array, grid_ref: Grid, tick_manager: TickManager) -> void:
 	grid = grid_ref
@@ -82,6 +86,9 @@ func build(map_lines: Array, grid_ref: Grid, tick_manager: TickManager) -> void:
 				"star":
 					_add_tile(cell, Visuals.FLOOR_TEX)
 					_add_star(cell)
+				"enemy":
+					_add_tile(cell, Visuals.FLOOR_TEX)
+					_spawn(EnemyScript, "enemy", cell, Visuals.make_enemy(), tick_manager)
 				"door":
 					_add_door(cell, channel, map_lines)
 				"player":
@@ -89,7 +96,7 @@ func build(map_lines: Array, grid_ref: Grid, tick_manager: TickManager) -> void:
 					_spawn(PlayerScript, "player", cell, Visuals.make_player(), tick_manager)
 				"box":
 					_add_tile(cell, Visuals.FLOOR_TEX)
-					_spawn(BoxScript, "box", cell, Visuals.make_box(), tick_manager)
+					_spawn_box(cell, tick_manager)
 				_:
 					_add_tile(cell, Visuals.FLOOR_TEX)
 
@@ -154,7 +161,7 @@ func try_move(entity: GridEntity, dir: Vector2i) -> bool:
 	var target: Vector2i = entity.grid_pos + dir
 	if not grid.in_bounds(target) or _walls.has(target):
 		return false
-	var other: GridEntity = _entities.get(target)
+	var other = _entities.get(target)   # a GridEntity (player) OR the RigidBody3D crate
 	if other != null:
 		if other.pushable:
 			var beyond: Vector2i = target + dir
@@ -168,16 +175,23 @@ func try_move(entity: GridEntity, dir: Vector2i) -> bool:
 	_relocate(entity, target)
 	return true
 
-func _relocate(entity: GridEntity, cell: Vector2i) -> void:
+func _relocate(entity, cell: Vector2i) -> void:
 	_entities.erase(entity.grid_pos)
 	entity.set_cell(cell)
 	_entities[cell] = entity
 
-func entity_at(cell: Vector2i) -> GridEntity:
+func entity_at(cell: Vector2i) -> Node3D:
 	return _entities.get(cell)
 
 func door_at(cell: Vector2i) -> Door:
 	return _doors.get(cell)
+
+## Called by an enemy when it reaches the player. Ends the level (fires `lost` once).
+func player_caught() -> void:
+	if _lost:
+		return
+	_lost = true
+	lost.emit()
 
 # --- win condition ---
 ## Star levels win by collecting every star. Levels with no star fall back to the legacy
@@ -188,7 +202,7 @@ func is_won() -> bool:
 	if _goals.is_empty():
 		return false
 	for g in _goals:
-		var e: GridEntity = _entities.get(g)
+		var e = _entities.get(g)
 		if e == null or not e.pushable:
 			return false
 	return true
@@ -232,8 +246,8 @@ func _add_star(cell: Vector2i) -> void:
 func _add_door(cell: Vector2i, channel: int, map_lines: Array) -> void:
 	_add_tile(cell, Visuals.FLOOR_TEX)  # floor under the door (visible when it opens)
 	var d := Visuals.make_door(Visuals.channel_color(channel))
-	# Raise half a cube so the slab sits ON the floor instead of half-buried in it.
-	d.position = grid.cell_to_world(cell) + Vector3(0, 0.5, 0)
+	# Sit the slab on the floor, dropped 0.05 so its bottom face doesn't z-fight the floor tile.
+	d.position = grid.cell_to_world(cell) + Vector3(0, 0.45, 0)
 	# Auto-orient: a door set into a VERTICAL wall (walls above & below) turns 90 degrees so you
 	# pass through it left<->right. Otherwise it keeps the default up<->down passage.
 	var vertical_wall := _is_wall_char(map_lines, cell.x, cell.y - 1) and _is_wall_char(map_lines, cell.x, cell.y + 1)
@@ -265,7 +279,7 @@ func _spawn(script: GDScript, kind: String, cell: Vector2i, mesh: Node3D, tick_m
 
 	# Collision shape so the entity blocks movement in real-time mode.
 	var col := CollisionShape3D.new()
-	if kind == "player":
+	if kind == "player" or kind == "enemy":
 		var cap := CapsuleShape3D.new()
 		cap.radius = 0.32
 		cap.height = 1.0
@@ -288,3 +302,20 @@ func _spawn(script: GDScript, kind: String, cell: Vector2i, mesh: Node3D, tick_m
 	tick_manager.tick.connect(e.on_tick)
 	if kind == "player":
 		player = e
+
+## Crates are RigidBody3D (real physics in real-time; frozen + grid-controlled in turn-based).
+func _spawn_box(cell: Vector2i, tick_manager: TickManager) -> void:
+	var box = BoxScript.new()   # untyped: it's a RigidBody3D + the box.gd grid interface
+	box.collision_layer = Visuals.LAYER_ENTITY
+	box.collision_mask = Visuals.LAYER_WORLD | Visuals.LAYER_ENTITY
+	box.add_child(Visuals.make_box())          # centered wood cube
+	var col := CollisionShape3D.new()
+	var shape := BoxShape3D.new()
+	shape.size = Vector3(0.9, 0.9, 0.9)
+	col.shape = shape
+	box.add_child(col)
+	add_child(box)
+	box.setup(self, cell)                       # positions it (must be in the tree first)
+	_entities[cell] = box
+	_movers.append(box)
+	tick_manager.tick.connect(box.on_tick)

@@ -9,7 +9,7 @@ extends GridEntity
 ## this script doesn't know or care which. See scripts/input_router.gd.
 
 const MOVE_SPEED: float = 5.0
-const PUSH_FORCE: float = 4.5   ## how hard the player shoves a box
+const PUSH_IMPULSE: float = 0.6   ## per-frame shove into a crate; capped at MOVE_SPEED so it can't run away
 
 func _physics_process(_delta: float) -> void:
 	if not _use_physics:
@@ -22,12 +22,14 @@ func _physics_process(_delta: float) -> void:
 	for i in get_slide_collision_count():
 		var col := get_slide_collision(i)
 		var other := col.get_collider()
-		if other is GridEntity and other.pushable:
+		if other is RigidBody3D and other.pushable:
 			var push_dir := -col.get_normal()
 			push_dir.y = 0.0
 			push_dir = push_dir.normalized()
-			var strength := velocity.length() * col.get_depth()
-			other._push_velocity = push_dir * strength * PUSH_FORCE
+			# Push at the CONTACT POINT so an off-center hit also spins the crate. Cap its speed
+			# near ours so repeated per-frame impulses don't accelerate it forever.
+			if other.linear_velocity.dot(push_dir) < MOVE_SPEED:
+				other.apply_impulse(push_dir * PUSH_IMPULSE, col.get_position() - other.global_position)
 
 func on_tick() -> void:
 	if _use_physics:

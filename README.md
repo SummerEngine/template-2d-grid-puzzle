@@ -49,10 +49,10 @@ crates onto the green pads, and progress through the levels.
 4. **Change the win rule** — edit `_on_tick()` in `scripts/game_manager.gd`. It runs after
    every world tick; on a win it sends you to the Level Complete screen.
 
-5. **Make it look like your game** — tile art is pixel-art textures in `art/tiles/`
-   (`floor_stone`, `floor_plate`, `floor_key`, `wall_metal`, `crate_wood`, `door_tile`).
-   Swap a PNG to reskin a tile; paths live in `scripts/visuals.gd`. The player stays a flat
-   capsule. Menu palette is `scripts/autoload/ui_theme.gd` (change 5 colors, whole UI reskins).
+5. **Make it look like your game** — tile art is pixel-art textures in `art/tiles/`;
+   swap a PNG to reskin a tile (paths live in `scripts/visuals.gd`). The player is a 2D
+   animated sprite from a walk sheet in `art/sprites/` (see below). Menu palette is
+   `scripts/autoload/ui_theme.gd` (change 5 colors, whole UI reskins).
 
 6. **Turn Level Select off** — set `level_select_enabled = false` in `level_manager.gd`
    (or toggle it in the Settings screen).
@@ -94,6 +94,26 @@ which fades and swaps scenes.
 
 To add a screen: make `scripts/ui/foo.gd` (`extends Screen`), a one-line `screens/foo.tscn`,
 register it in `GameFlow.SCREENS`, then `GameFlow.goto("foo")`. See `.summer/ui-system-contract.md`.
+
+## 2D sprite characters (top-down walk sheets)
+
+Characters are 2D animated sprites living in the 3D world — an `AnimatedSprite3D` that
+billboards toward the camera. One call slices any 4-direction walk sheet:
+
+```gdscript
+Visuals.make_sprite_character("res://art/sprites/hero_green.png", 4, 4,
+    {down = 0, up = 1, left = 2, right = 3})
+```
+
+`columns, rows` describe the sheet grid; the dictionary says which ROW holds each direction's
+walk cycle. The sprite picks `walk_down/up/left/right` on its own by watching its motion
+(`scripts/sprite_character.gd`), so the same node works on the player, an enemy, anything —
+in both movement modes. Drop a new sheet in `art/sprites/`, adjust the numbers, done.
+
+Included sheets (both with transparent backgrounds):
+- `hero_green.png` — 4×4, rows down/up/left/right. The default player.
+- `hero_cape.png` — 6×8 grid, 40×56 frames. Extra character; check the sheet and map the
+  rows you want when using it.
 
 ## Adding sounds
 

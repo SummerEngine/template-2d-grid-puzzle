@@ -3,7 +3,7 @@ extends Node
 ## The ordered list of levels + where the player is in it.
 ## ADD A LEVEL = add an entry below. Each level is a name + an ASCII map + optional "realtime".
 ## Map legend (see level.gd LEGEND):
-##   # wall   @ player   $ crate   * star (collect to WIN)   . plate   K key   D door   space = floor
+##   # wall   @ player   $ crate   * star (collect to WIN)   E enemy (chases you)   . plate   K key   D door   space = floor
 ## Color channels (a door opens while its plate is pressed, or forever once its key is taken):
 ##   blue: b plate / B key / 1 door     green: g / G / 2     red: r / R / 3
 
@@ -11,7 +11,7 @@ extends Node
 ## The Settings screen can also flip this at runtime.
 var level_select_enabled := true
 
-## Camera view: 0=top-down, 1=angled ortho, 2=angled perspective.
+## Camera view: 0=top-down, 1=perspective.
 ## Persisted on LevelManager so Settings and the game scene agree on it.
 var cam_view := 1
 
@@ -34,28 +34,19 @@ const LEVELS := [
 		],
 	},
 	{
+		# Two buttons, two doors in a row. Push a crate onto the BLUE plate (b) to open the blue
+		# door (1) and onto the GREEN plate (g) to open the green door (2), then cross to the star.
+		# Both crates must stay put to hold both doors open.
 		"name": "Two Crates",
 		"realtime": false,
 		"map": [
-			"#########",
-			"#       #",
-			"#  @ $ .#",
-			"#       #",
-			"#  $ .  #",
-			"#       #",
-			"#########",
-		],
-	},
-	{
-		"name": "Corner",
-		"realtime": false,
-		"map": [
-			"########",
-			"#  .   #",
-			"#  $   #",
-			"#  @   #",
-			"#      #",
-			"########",
+			"###############",
+			"#@      ##    #",
+			"# $  b  ##    #",
+			"#       12   *#",
+			"# $  g  ##    #",
+			"#       ##    #",
+			"###############",
 		],
 	},
 	{
@@ -83,6 +74,23 @@ const LEVELS := [
 			"#   2   #",
 			"#   #   #",
 			"#########",
+		],
+	},
+	{
+		# ENEMY LEVEL. The red enemy walks straight at you -- use the pillars as cover to slip
+		# past it and reach the star. (It steps every other turn by default; see enemy.gd tunables.)
+		"name": "The Chase",
+		"realtime": false,
+		"map": [
+			"#############",
+			"#@          #",
+			"#  ##   ##  #",
+			"#  ##   ##  #",
+			"#     E     #",
+			"#  ##   ##  #",
+			"#  ##   ##  #",
+			"#          *#",
+			"#############",
 		],
 	},
 ]

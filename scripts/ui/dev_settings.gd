@@ -27,7 +27,7 @@ and remove this menu.",
 	cam_row.add_child(cam_label)
 	var cam_option := OptionButton.new()
 	cam_option.custom_minimum_size = Vector2(260, 0)
-	for name in ["Top-down", "Angled (ortho)", "Angled (perspective)"]:
+	for name in ["Top-down", "Perspective"]:
 		cam_option.add_item(name)
 	cam_option.selected = LevelManager.cam_view
 	cam_option.item_selected.connect(_on_cam_selected)

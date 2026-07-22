@@ -12,7 +12,7 @@ func _ready() -> void:
 	_rect = ColorRect.new()
 	_rect.color = Color(0.043, 0.075, 0.035, 0.0)  # UITheme.BG, starts transparent
 	_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(_rect)
 
 func fade_out(duration: float = 0.2) -> void:

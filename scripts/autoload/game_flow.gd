@@ -10,6 +10,7 @@ const SCREENS := {
 	"level_select": "res://screens/level_select.tscn",
 	"game": "res://game.tscn",
 	"level_complete": "res://screens/level_complete.tscn",
+	"level_failed": "res://screens/level_failed.tscn",
 	"settings": "res://screens/settings.tscn",
 	"credits": "res://screens/credits.tscn",
 	"dev_settings": "res://screens/dev_settings.tscn",

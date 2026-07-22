@@ -19,9 +19,15 @@ class_name Visuals
 const FLOOR_TEX := "res://art/tiles/floor_stone.png"
 const PLATE_TEX := "res://art/tiles/floor_plate.png"           # goal: metal pressure plate (up)
 const PLATE_PRESSED_TEX := "res://art/tiles/floor_plate_pressed.png"  # goal: plate pressed down
-const DOOR_TEX := "res://art/tiles/floor_door.png"      # door tile (render-only)
+const DOOR_TEX := "res://art/tiles/door_wood.png"      # wooden door panel (sits on each door half)
 const WALL_TEX := "res://art/tiles/wall_metal.png"
 const CRATE_TEX := "res://art/tiles/crate_wood.png"
+
+## 4-direction character sprite sheets (art/sprites/). Both have real alpha.
+##   hero_green: 4 cols x 4 rows, rows = down/up/left/right walk (the default player)
+##   hero_cape:  6 cols x 8 rows, 40x56 frames — extra sheet; map its rows when you use it
+const PLAYER_SHEET := "res://art/sprites/hero_green.png"
+const CAPE_SHEET := "res://art/sprites/hero_cape.png"
 
 ## Collision layers used by the physics system in real-time mode.
 const LAYER_WORLD := 1   ## walls, static obstacles
@@ -107,11 +113,10 @@ static func make_wall() -> StaticBody3D:
 
 	return wall
 
-## A slightly-smaller cube (0.9 x 0.9 x 0.9) for pushable crates.
-## Visual only -- collision shape is added by Level._spawn().
+## A slightly-smaller cube (0.9 x 0.9 x 0.9) for pushable crates. Centered on the origin so the
+## RigidBody3D crate rotates about its own center. Body + collision are set up in Level._spawn_box().
 static func make_box() -> Node3D:
 	var box := Node3D.new()
-	box.position.y = 0.45          # sit on the floor
 	var s := 0.45
 	var face_size := Vector2(0.9, 0.9)
 	var mat := _tex_mat(CRATE_TEX)
@@ -204,14 +209,51 @@ static func _door_half(x_pos: float, node_name: String, tint: Color = Color(1, 1
 
 ## Player visual: a flat-shaded blue capsule so the actor reads clearly.
 ## Visual only -- collision shape is added by Level._spawn().
-static func make_player() -> MeshInstance3D:
+## The player is a 2D animated sprite (see make_sprite_character). Want a different look?
+## Point PLAYER_SHEET at your own 4-direction sheet and adjust the grid/rows here.
+static func make_player() -> Node3D:
+	return make_sprite_character(PLAYER_SHEET, 4, 4, {down = 0, up = 1, left = 2, right = 3})
+
+## Build a SpriteCharacter (AnimatedSprite3D) from a 4-direction walk sheet.
+##   columns/rows: the sheet grid. row_map: which ROW holds each direction's walk cycle.
+##   world_height: how tall the character stands in world units (a cell is 1.0).
+## The sprite billboards toward the camera, keeps crisp pixels, and picks walk_down/up/left/
+## right on its own by watching its motion (scripts/sprite_character.gd) — works on anything.
+static func make_sprite_character(sheet_path: String, columns: int, rows: int, row_map: Dictionary, fps: float = 8.0, world_height: float = 0.9) -> AnimatedSprite3D:
+	var tex: Texture2D = load(sheet_path)
+	var fw: int = tex.get_width() / columns
+	var fh: int = tex.get_height() / rows
+	var frames := SpriteFrames.new()
+	for dir in row_map:
+		var anim: String = "walk_" + dir  # explicit type: dir is a Variant dictionary key
+		frames.add_animation(anim)
+		frames.set_animation_speed(anim, fps)
+		frames.set_animation_loop(anim, true)
+		for c in columns:
+			var at := AtlasTexture.new()
+			at.atlas = tex
+			at.region = Rect2(c * fw, row_map[dir] * fh, fw, fh)
+			frames.add_frame(anim, at)
+	var s := AnimatedSprite3D.new()
+	s.set_script(load("res://scripts/sprite_character.gd"))
+	s.sprite_frames = frames
+	s.animation = "walk_down"
+	s.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	s.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+	s.pixel_size = world_height / fh
+	s.position.y = world_height * 0.5
+	return s
+
+## Temporary enemy visual: a red flat-shaded capsule. Stand-in until a rigged model lands --
+## swapping in a generated .glb here is a one-function change (see the chasing-enemies design).
+static func make_enemy() -> MeshInstance3D:
 	var mesh := CapsuleMesh.new()
 	mesh.radius = 0.32
 	mesh.height = 1.0
 	var mi := MeshInstance3D.new()
 	mi.mesh = mesh
 	mi.position.y = 0.5
-	mi.material_override = _flat(Color(0.30, 0.60, 1.0))
+	mi.material_override = _flat(Color(0.90, 0.20, 0.20))
 	return mi
 
 ## A floating 3D collectible star (real geometry — no sprite, no transparency). It spins and
@@ -276,39 +318,30 @@ static func _star_mesh(outer_r: float, inner_r: float, thickness: float) -> Arra
 	st.generate_normals()
 	return st.commit()
 
-## A floating 3D key (real geometry — no sprite, no transparency), flat-shaded in `color` so
-## its channel color reads at a glance. Spins + bobs via pickup.gd. Built from a torus bow +
-## a box shaft + two tooth boxes, laid flat so it reads from a top-down camera.
+## A floating 3D key — the generated model in art/models/key.glb. Channel 0 keeps the model's
+## own gold material; colored channels tint the whole key so they read at a glance. Spins +
+## bobs via pickup.gd. SCALE / TILT are tunable — adjust if it's too big/small or sits wrong.
+const KEY_MODEL := "res://art/models/key.glb"
+const KEY_SCALE := 0.45      ## the model imports ~1 unit tall; shrink to fit a cell
+const KEY_TILT_DEG := 0.0    ## rotate about X if you'd rather lay the key flat (e.g. -90)
+
 static func make_key(color: Color) -> Node3D:
 	var pivot := Node3D.new()
 	pivot.name = "Key"
 	pivot.set_script(load("res://scripts/pickup.gd"))
-	var mat := _flat(color)
 
-	var bow := MeshInstance3D.new()
-	var ring := TorusMesh.new()
-	ring.inner_radius = 0.07
-	ring.outer_radius = 0.15
-	bow.mesh = ring
-	bow.material_override = mat
-	bow.position = Vector3(-0.15, 0, 0)
-	pivot.add_child(bow)
-
-	var shaft := MeshInstance3D.new()
-	var shaft_box := BoxMesh.new()
-	shaft_box.size = Vector3(0.34, 0.05, 0.05)
-	shaft.mesh = shaft_box
-	shaft.material_override = mat
-	shaft.position = Vector3(0.12, 0, 0)
-	pivot.add_child(shaft)
-
-	for tx: float in [0.22, 0.28]:   # two teeth near the end of the shaft
-		var tooth := MeshInstance3D.new()
-		var tooth_box := BoxMesh.new()
-		tooth_box.size = Vector3(0.05, 0.05, 0.10)
-		tooth.mesh = tooth_box
-		tooth.material_override = mat
-		tooth.position = Vector3(tx, 0, 0.075)
-		pivot.add_child(tooth)
-
+	var model: Node3D = load(KEY_MODEL).instantiate()
+	model.scale = Vector3.ONE * KEY_SCALE
+	model.rotation.x = deg_to_rad(KEY_TILT_DEG)
+	# Channel 0 (white) keeps the model's gold look; colored channels tint the whole key.
+	if not color.is_equal_approx(Color(1, 1, 1)):
+		_tint_meshes(model, _flat(color))
+	pivot.add_child(model)
 	return pivot
+
+## Apply a material override to every MeshInstance3D under `node` (recursive).
+static func _tint_meshes(node: Node, mat: Material) -> void:
+	if node is MeshInstance3D:
+		node.material_override = mat
+	for child in node.get_children():
+		_tint_meshes(child, mat)

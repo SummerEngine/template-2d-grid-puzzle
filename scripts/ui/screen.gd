@@ -8,11 +8,11 @@ class_name Screen
 const MenuButtonScript := preload("res://scripts/ui/menu_button.gd")
 
 func _ready() -> void:
-	set_anchors_preset(Control.PRESET_FULL_RECT)
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	theme = UITheme.theme
 	var bg := ColorRect.new()
 	bg.color = UITheme.BG
-	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(bg)
 	move_child(bg, 0)
@@ -27,7 +27,7 @@ func _on_screen_ready() -> void:
 ## A vertically-centered column you add rows to. Returns the VBoxContainer.
 func center_column(separation: int = 16) -> VBoxContainer:
 	var center := CenterContainer.new()
-	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(center)
 	var vbox := VBoxContainer.new()
 	vbox.alignment = BoxContainer.ALIGNMENT_CENTER

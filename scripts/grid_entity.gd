@@ -16,7 +16,6 @@ var kind: String = ""        ## free-form tag, handy in on_bump()
 var level                    ## reference to the Level, set in setup()
 
 var _use_physics: bool = false  ## toggled by GameManager when move_mode changes
-var _push_velocity: Vector3 = Vector3.ZERO  ## for real-time pushable boxes
 var _target_world: Vector3 = Vector3.ZERO
 const MOVE_LERP: float = 14.0
 
@@ -42,3 +41,7 @@ func on_tick() -> void:
 
 func on_bump(_other: GridEntity) -> void:
 	pass
+
+## Toggle real-time physics on/off (called by GameManager when the movement mode changes).
+func set_physics_active(active: bool) -> void:
+	_use_physics = active
