@@ -1,6 +1,6 @@
 {
   "id": "2d-grid-puzzle",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "name": "Grid-Based Puzzle",
   "engineMinVersion": "0.5.43",
   "entryScene": "res://screens/main_menu.tscn",
