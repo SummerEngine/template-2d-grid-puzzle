@@ -93,7 +93,8 @@ func build(map_lines: Array, grid_ref: Grid, tick_manager: TickManager) -> void:
 					_add_door(cell, channel, map_lines)
 				"player":
 					_add_tile(cell, Visuals.FLOOR_TEX)
-					_spawn(PlayerScript, "player", cell, Visuals.make_player(), tick_manager)
+					var robot: bool = LevelManager.player_visual == LevelManager.PLAYER_ROBOT
+					_spawn(PlayerScript, "player", cell, Visuals.make_player(robot), tick_manager)
 				"box":
 					_add_tile(cell, Visuals.FLOOR_TEX)
 					_spawn_box(cell, tick_manager)

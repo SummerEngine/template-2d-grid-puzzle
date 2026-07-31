@@ -20,6 +20,12 @@ var cam_view := 1
 ## 1 = real-time (timer-based ticks, hold to move freely)
 var move_mode := 0
 
+## Player look: the standard Summer robot (a rigged, animated 3D character) or the
+## classic 2D sprite. Flip it in Dev Settings, or hardcode your favourite here.
+const PLAYER_ROBOT := 0
+const PLAYER_SPRITE := 1
+var player_visual := PLAYER_ROBOT
+
 const LEVELS := [
 	{
 		# Walk onto the star to win — the simplest objective.
@@ -30,6 +36,20 @@ const LEVELS := [
 			"#     #",
 			"# @ * #",
 			"#     #",
+			"#######",
+		],
+	},
+	{
+		# Channel 0 (no color): grab the key (K) and the door (D) opens FOREVER -- no plate
+		# needed. The star chamber below is sealed except through that door.
+		"name": "Vault",
+		"realtime": false,
+		"map": [
+			"#######",
+			"#@   K#",
+			"#     #",
+			"##D####",
+			"#*    #",
 			"#######",
 		],
 	},
@@ -47,19 +67,6 @@ const LEVELS := [
 			"# $  g  ##    #",
 			"#       ##    #",
 			"###############",
-		],
-	},
-	{
-		# Channel 0 (no color): grab the key (K) and the door (D) opens forever.
-		# The goal plate (.) also opens channel-0 doors while a crate sits on it.
-		"name": "Vault",
-		"realtime": false,
-		"map": [
-			"#######",
-			"#@  K #",
-			"#  $  #",
-			"#  .  #",
-			"###D###",
 		],
 	},
 	{
