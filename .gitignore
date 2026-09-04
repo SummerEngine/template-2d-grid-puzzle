@@ -2,7 +2,8 @@
 .godot/
 # Exported builds
 /build/
-*.import
+# *.import files are import settings + uids for the shipped PNG/GLB/SVG assets; commit them
+# once an editor pass has generated them so every clone imports identically.
 # Editor backups
 *.bak
 # Summer Engine machine-local state (project id + absolute path)
