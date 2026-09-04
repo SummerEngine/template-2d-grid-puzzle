@@ -4,16 +4,19 @@ A tiny **grid-based topdown** template for 12-hour hackathons. Fork it into a So
 roguelike, a Pac-Man, a Zelda-like, a puzzle game, a tower defense — the grid is the same,
 only your rules change.
 
-- **3D, but zero 2D art.** Everything is a flat-shaded primitive (box / capsule / cylinder).
-  Recolor or reshape in `scripts/visuals.gd`. Drop in a `.glb` later if you want.
+- **A 3D scene, not a 2D one.** The board is built from unshaded 3D quads textured with the
+  pixel-art PNGs in `art/tiles/` (no lights, Compatibility renderer); the player is the rigged
+  Summer robot `.glb` in `art/models/robot/` or, optionally, a billboarded 2D sprite sheet.
+  Everything visual is assembled in `scripts/visuals.gd`.
 - **Real-time OR turn-based**, one flag.
 - **Keyboard now, Arduino later** — same input actions, no code change.
 - **Light by design** — no shadows, no post, orthographic camera, Compatibility renderer.
 - **Full menu system** — main menu, level select, settings, credits, pause, level-complete,
   with a Game Boy-green theme and fade transitions. Sound-ready.
 
-The game boots into the **Main Menu**. The shipped demo is a 3-level Sokoban: push the tan
-crates onto the green pads, and progress through the levels.
+The game boots into the **Main Menu**. The shipped demo is 5 levels (Warmup, Vault, Two Crates,
+Color Lock, The Chase): collect every star, push crates onto plates, open doors with keys and
+plates, and outrun the chasing enemy.
 
 ## Controls
 - Move: **Arrow keys** or **WASD**
@@ -50,8 +53,9 @@ crates onto the green pads, and progress through the levels.
    every world tick; on a win it sends you to the Level Complete screen.
 
 5. **Make it look like your game** — tile art is pixel-art textures in `art/tiles/`;
-   swap a PNG to reskin a tile (paths live in `scripts/visuals.gd`). The player is a 2D
-   animated sprite from a walk sheet in `art/sprites/` (see below). Menu palette is
+   swap a PNG to reskin a tile (paths live in `scripts/visuals.gd`). The player defaults to the
+   rigged Summer robot (`LevelManager.player_visual`, `scripts/robot_character.gd`); switch it to
+   a 2D animated sprite from a walk sheet in `art/sprites/` (see below). Menu palette is
    `scripts/autoload/ui_theme.gd` (change 5 colors, whole UI reskins).
 
 6. **Turn Level Select off** — set `level_select_enabled = false` in `level_manager.gd`
@@ -68,7 +72,7 @@ crates onto the green pads, and progress through the levels.
 | `scripts/player.gd` | Reads input on each tick, asks the Level to move. |
 | `scripts/box.gd` | Example pushable crate (the subclassing pattern). |
 | `scripts/level.gd` | Builds the world from the ASCII map; owns the one shared movement rule. |
-| `scripts/visuals.gd` | The only "art": flat-shaded primitive meshes. |
+| `scripts/visuals.gd` | Builds every board visual: textured quad-face blocks, sprite characters, the robot. |
 | `scripts/game_manager.gd` | Plays the current level; handles pause + win. |
 | `game.tscn` | The gameplay scene (one level at a time). |
 
@@ -111,7 +115,7 @@ walk cycle. The sprite picks `walk_down/up/left/right` on its own by watching it
 in both movement modes. Drop a new sheet in `art/sprites/`, adjust the numbers, done.
 
 Included sheets (both with transparent backgrounds):
-- `hero_green.png` — 4×4, rows down/up/left/right. The default player.
+- `hero_green.png` — 4×4, rows down/up/left/right. The sprite-mode player (`player_visual = 1`).
 - `hero_cape.png` — 6×8 grid, 40×56 frames. Extra character; check the sheet and map the
   rows you want when using it.
 
