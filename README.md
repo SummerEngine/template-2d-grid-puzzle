@@ -1,23 +1,44 @@
+![GridKit](docs/cover.jpg)
+
 # GridKit
 
-A tiny **grid-based topdown** template for 12-hour hackathons. Fork it into a Sokoban, a
-roguelike, a Pac-Man, a Zelda-like, a puzzle game, a tower defense — the grid is the same,
-only your rules change.
+A grid puzzle starter for Summer Engine: push crates, trigger plates, grab keys and dodge a
+chasing enemy, in levels you write as text. Fork it into a Sokoban, a roguelike, a Pac-Man,
+a Zelda-like or a tower defense; the grid is the same, only your rules change.
 
-- **3D, but zero 2D art.** Everything is a flat-shaded primitive (box / capsule / cylinder).
-  Recolor or reshape in `scripts/visuals.gd`. Drop in a `.glb` later if you want.
-- **Real-time OR turn-based**, one flag.
-- **Keyboard now, Arduino later** — same input actions, no code change.
-- **Light by design** — no shadows, no post, orthographic camera, Compatibility renderer.
-- **Full menu system** — main menu, level select, settings, credits, pause, level-complete,
-  with a Game Boy-green theme and fade transitions. Sound-ready.
+## What's inside
 
-The game boots into the **Main Menu**. The shipped demo is a 3-level Sokoban: push the tan
-crates onto the green pads, and progress through the levels.
+- **Five puzzle levels** (Warmup, Vault, Two Crates, Color Lock, The Chase) authored as
+  plain-text ASCII maps. Add a level by typing a grid.
+- **Turn-based or real-time movement**, per level or switched at runtime.
+- **Color-channel logic**: pressure plates, keys and doors in blue, green and red.
+- **Pushable crates, collectible stars and an enemy** that hunts you down.
+- **Two player looks**: the standard Summer robot (rigged 3D) or a classic 2D walk-sheet sprite.
+- **Full menu system**: main menu, level select, settings, credits, pause and level-complete
+  screens, with a Game Boy-green theme and fade transitions.
+- **Light by design and Arduino-ready**: flat-shaded primitives, no shadows, Compatibility
+  renderer, and one input router for keyboard or a serial controller.
+
+## Get started
+
+1. Download this repo as a [ZIP](https://github.com/SummerEngine/template-2d-grid-puzzle/archive/refs/heads/main.zip) or clone it.
+2. Open the folder in [Summer Engine](https://www.summerengine.com/download).
+3. Press Play. The game boots into the main menu.
+
+Summer's AI agent can extend the game for you. Try:
+
+- "Add an ice tile that makes the player slide until they hit a wall."
+- "Make a sixth level that combines the blue plate, the red key and the chasing enemy."
+- "Add a move counter and a par score for each level."
 
 ## Controls
-- Move: **Arrow keys** or **WASD**
-- Action button: **Space** (unused by the demo; wired up for your game)
+
+| Action | Keys |
+|--------|------|
+| Move | Arrow keys or WASD |
+| Restart level | R |
+| Switch camera (top-down / perspective) | Tab |
+| Action button (wired up for your game) | Space |
 
 ## Make it your own
 
